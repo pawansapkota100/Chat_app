@@ -21,4 +21,4 @@ class Message(models.Model):
         ordering= ('timestamp',)
     
     def __str__(self):
-        return f'{self.sender}: {self.content[:50]}'
+        return f' {self.content[:50]}'

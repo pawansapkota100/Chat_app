@@ -2,8 +2,11 @@ from channels.generic.websocket import AsyncJsonWebsocketConsumer
 import json
 from .models import Chatroom, Message
 from channels.db import database_sync_to_async
+from django.contrib.auth.models import User
+# import get_or_create
 
 class ChatConsumer(AsyncJsonWebsocketConsumer):
+    user= User.objects.first()
     
     async def connect(self):
         self.room_name= self.scope['url_route']['kwargs']['room_name']
@@ -17,21 +20,24 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         await self.channel_layer.group_discard(self.group_name, self.channel_name)
     
     @database_sync_to_async
-    def get_chatroom(self, room_name):
-        return Chatroom.objects.get(name= self.room_name)
+    def get_chatroom(self):
+        chatroom, created = Chatroom.objects.get_or_create(name='default_room')
+        return chatroom
     
     @database_sync_to_async
     def create_message(self, room, user, content):
-        return Message.objects.create(room= room, content= content)
+        return Message.objects.create(room= room,user=user, content= content)
 
     async def receive(self, text_data):
         text_data_json= json.loads(text_data)
         message= text_data_json['message']
-        user= self.scope["user"]
+        user = text_data_json['user'] 
+        # user= self.scope["user"]
 
-        # room= await self.get_chatroom(self.room_name)
+        room= await self.get_chatroom()
+        
 
-        # await self.create_message(room,user,content= message)
+        await self.create_message(room=room,user= self.user,content= message)
         # await Message.objects.create(room=room, user=user, content= message)
 
         await self.channel_layer.group_send(
@@ -40,7 +46,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
                 'type': 'chat_message',
 
                 'message': message,
-                'user': user.username
+                'user': user
             }
         )
     async def chat_message(self, event):

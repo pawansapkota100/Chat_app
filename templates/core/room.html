@@ -1,4 +1,4 @@
-<!-- chat/templates/chat/room.html -->
+<!-- room.html -->
 <!DOCTYPE html>
 <html>
 <head>
@@ -6,6 +6,9 @@
     <title>Chat Room</title>
 </head>
 <body>
+    <h1>Welcome to the Chat Room: {{ room_name }}</h1>
+    <p>You are logged in as: {{ user.username }}</p>
+
     <textarea id="chat-log" cols="100" rows="20"></textarea><br>
     <input id="chat-message-input" type="text" size="100"><br>
     <input id="chat-message-submit" type="button" value="Send">
@@ -32,7 +35,7 @@
 
         document.querySelector('#chat-message-input').focus();
         document.querySelector('#chat-message-input').onkeyup = function(e) {
-            if (e.key === 'Enter') {  // enter, return
+            if (e.key === 'Enter') {
                 document.querySelector('#chat-message-submit').click();
             }
         };
@@ -41,7 +44,8 @@
             const messageInputDom = document.querySelector('#chat-message-input');
             const message = messageInputDom.value;
             chatSocket.send(JSON.stringify({
-                'message': message
+                'message': message,
+                'user': '{{ user.username }}'  // Sending the username along with the message
             }));
             messageInputDom.value = '';
         };
