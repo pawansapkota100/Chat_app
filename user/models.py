@@ -68,3 +68,25 @@ class User(AbstractUser):
     class Meta:
         verbose_name = 'User'
         verbose_name_plural = 'Users'
+
+
+class Student_profile(models.Model):
+    user= models.OneToOneField(User, on_delete=models.CASCADE)
+    course_enrolled=models.ManyToManyField('Course', related_name='students', blank=True)
+    grade= models.CharField(max_length=100, null=True, blank=True)
+
+class Instructor_profile(models.Model):
+    user= models.OneToOneField(User, on_delete=models.CASCADE)
+    bio= models.TextField(null=True, blank=True)
+    course_taught=models.ManyToManyField('Course', related_name='instructors', blank=True)
+
+class Course(models.Model):
+    name= models.CharField(max_length=100)
+    description= models.TextField()
+    instructor= models.ManyToManyField(User, related_name='courses_instructor',limit_choices_to={'role': 'INSTRUCTOR'})
+    student= models.ManyToManyField(User, related_name='courses_student', blank=True, limit_choices_to={'role': 'STUDENT'})
+    created_by= models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_courses')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    def __str__(self):
+        return self.name
