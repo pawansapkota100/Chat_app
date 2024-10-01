@@ -1,11 +1,11 @@
-from channels.generic.websocket import AsyncJsonWebsocketConsumer
+from channels.generic.websocket import AsyncWebsocketConsumer
 import json
 from .models import Chatroom, Message
 from channels.db import database_sync_to_async
 from django.contrib.auth.models import User
 # import get_or_create
 
-class ChatConsumer(AsyncJsonWebsocketConsumer):
+class ChatConsumer(AsyncWebsocketConsumer):
     user= User.objects.first()
     
     async def connect(self):
@@ -29,26 +29,37 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         return Message.objects.create(room= room,user=user, content= content)
 
     async def receive(self, text_data):
-        text_data_json= json.loads(text_data)
-        message= text_data_json['message']
-        user = text_data_json['user'] 
-        # user= self.scope["user"]
+        try:
+            # Attempt to parse the incoming text data as JSON
+            text_data_json = json.loads(text_data)
+            
+            # Safely extract 'message' and 'user' from the parsed JSON
+            message = text_data_json.get('message', None)
+            user = text_data_json.get('user', None)
 
-        room= await self.get_chatroom()
-        
+            # Validate that both 'message' and 'user' are present
+            if message is None or user is None:
+                # Optionally log the error or handle it
+                await self.send(text_data=json.dumps({
+                    'error': "Invalid data: 'message' or 'user' missing."
+                }))
+                return
 
-        await self.create_message(room=room,user= self.user,content= message)
-        # await Message.objects.create(room=room, user=user, content= message)
+            # If the message and user are valid, send the message to the group
+            await self.channel_layer.group_send(
+                self.group_name,
+                {
+                    'type': 'chat_message',
+                    'message': message,
+                    'user': user,
+                }
+            )
 
-        await self.channel_layer.group_send(
-            self.group_name,
-            {
-                'type': 'chat_message',
-
-                'message': message,
-                'user': user
-            }
-        )
+        except json.JSONDecodeError:
+            # Handle the case where the text data is not valid JSON
+            await self.send(text_data=json.dumps({
+                'error': "Received data is not valid JSON."
+            }))
     async def chat_message(self, event):
         Message= event['message']
         user= event['user']
