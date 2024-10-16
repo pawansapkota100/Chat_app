@@ -21,5 +21,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('chat/', include('core.urls')),
     path('product/', include('product.urls')),
+    path("location/",include('geolocation.urls'))
 
 ]
