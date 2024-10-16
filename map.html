@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Map</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <style>
+        #map {
+            height: 500px; /* Adjust height as needed */
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script>
+        // Initialize the map
+        const map = L.map('map').setView([0, 0], 2); // Change the coordinates as needed
+
+        // Add OpenStreetMap tile layer
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap'
+        }).addTo(map);
+
+        // Fetch the location data
+        fetch('http://127.0.0.1:8000/location/user_location/')
+            .then(response => response.json())
+            .then(data => {
+                data.forEach(location => {
+                    const coordinatesArray = location.coordiantes.match(/POINT \((-?\d+\.?\d*) (-?\d+\.?\d*)\)/);
+                    const longitude = parseFloat(coordinatesArray[1]);
+                    const latitude = parseFloat(coordinatesArray[2]);
+
+                    // Create a marker and add it to the map
+                    const marker = L.marker([latitude, longitude]).addTo(map);
+                    marker.bindPopup(`<b>User ID: ${location.user}</b><br>${location.description}`);
+                });
+            })
+            .catch(error => console.error('Error fetching location data:', error));
+    </script>
+</body>
+</html>
