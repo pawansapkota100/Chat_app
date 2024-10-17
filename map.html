@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Leaflet Map</title>
+    <title>Leaflet Map with Radius Search</title>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
@@ -11,44 +11,151 @@
             height: 600px;
             width: 100%;
         }
+        #controls {
+            margin-top: 20px;
+        }
     </style>
 </head>
 <body>
 
 <div id="map"></div>
 
+<div id="controls">
+    <button onclick="showCurrentLocation()">Show My Current Location</button>
+
+    <form id="radiusForm">
+        <label>Selected Latitude:</label>
+        <input type="text" id="latitude" placeholder="Click on map to get Latitude" readonly>
+        <label>Selected Longitude:</label>
+        <input type="text" id="longitude" placeholder="Click on map to get Longitude" readonly>
+        <label>Enter Radius (meters):</label>
+        <input type="number" id="radius" placeholder="Radius in meters" required>
+        <button type="submit">Show Points within Radius</button>
+    </form>
+</div>
+
 <script>
-    // Create the map and set the initial view to any default coordinates and zoom level
     var map = L.map('map').setView([27.7172, 85.3240], 13); // Kathmandu as initial view
-    
+
     // Add OpenStreetMap tiles
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
         attribution: '© OpenStreetMap'
     }).addTo(map);
-    
-    // Locate the user and set the view to their location
-    map.locate({setView: true, maxZoom: 16});
-    
+
+    var selectedMarker;  // To store the marker for the selected point
+    var circleLayer;      // To store the radius circle
+    var lineLayers = [];  // To store the line layers
+
+    // Function to show the user's current location
+    function showCurrentLocation() {
+        map.locate({setView: true, maxZoom: 16});
+    }
+
     // When location is found, add a marker at the user's location
     function onLocationFound(e) {
         var radius = e.accuracy / 2;
-        
+
         L.marker(e.latlng).addTo(map)
             .bindPopup("You are within " + radius + " meters from this point").openPopup();
-        
+
         L.circle(e.latlng, radius).addTo(map);
     }
-    
+
     map.on('locationfound', onLocationFound);
-    
+
     // If the location is not found or permission is denied
     function onLocationError(e) {
         alert(e.message);
     }
-    
+
     map.on('locationerror', onLocationError);
 
+    // Capture the coordinates when the user clicks on the map
+    map.on('click', function(e) {
+        var latlng = e.latlng;
+
+        // Update the latitude and longitude fields in the form
+        document.getElementById('latitude').value = latlng.lat;
+        document.getElementById('longitude').value = latlng.lng;
+
+        // Remove the old marker if it exists
+        if (selectedMarker) {
+            map.removeLayer(selectedMarker);
+        }
+
+        // Add a new marker for the selected point
+        selectedMarker = L.marker(latlng).addTo(map)
+            .bindPopup("Selected location: (" + latlng.lat + ", " + latlng.lng + ")").openPopup();
+    });
+
+    // Function to handle form submission
+    document.getElementById('radiusForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        var lat = document.getElementById('latitude').value;
+        var lng = document.getElementById('longitude').value;
+        var radiusInMeters = document.getElementById('radius').value;
+
+        if (!lat || !lng) {
+            alert("Please select a location on the map first!");
+            return;
+        }
+
+        // Convert the radius from meters to kilometers for the API
+        var radiusInKm = radiusInMeters / 1000;  // Convert meters to kilometers
+
+        // Send a POST request to your API
+        fetch('http://127.0.0.1:8000/location/user_location/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                coordinates: [parseFloat(lat), parseFloat(lng)],
+                radius: radiusInKm,  // Send radius in kilometers
+            }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Clear any existing points, lines, or circles
+            if (circleLayer) {
+                map.removeLayer(circleLayer);
+            }
+            lineLayers.forEach(layer => map.removeLayer(layer));
+            lineLayers = [];
+
+            // Add a circle showing the radius around the selected point in kilometers
+            circleLayer = L.circle([lat, lng], { 
+                radius: radiusInKm * 1000 // Convert the radius back to meters for the circle display
+            }).addTo(map);
+
+            // Parse and display the returned points
+            data.forEach(function (user) {
+                // Extract coordinates from the "SRID" string format
+                var coordinates = user.coordiantes.match(/POINT\s?\(([^)]+)\)/)[1].split(" ");
+                var userLatLng = [parseFloat(coordinates[1]), parseFloat(coordinates[0])];
+
+                // Add a marker for the user location
+                var userMarker = L.marker(userLatLng).addTo(map)
+                    .bindPopup("User at (" + userLatLng[0] + ", " + userLatLng[1] + ")").openPopup();
+                
+                // Draw a line between the selected point and the user location
+                var line = L.polyline([[lat, lng], userLatLng], { color: 'blue' }).addTo(map);
+
+                // Store the line in the lineLayers array to remove later if necessary
+                lineLayers.push(line);
+
+                // Calculate and show distance between the points
+                var distance = map.distance([lat, lng], userLatLng).toFixed(2); // Distance in meters
+                userMarker.bindPopup("User at (" + userLatLng[0] + ", " + userLatLng[1] + ")<br>Distance: " + distance + " meters").openPopup();
+            });
+
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+        });
+    });
 </script>
 
 </body>
