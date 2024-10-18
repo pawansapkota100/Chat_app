@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        * {
+            box-sizing: border-box;
+
+        }
+
+        body {
+            font-family: Arial;
+            padding: 10px;
+            background: #f1f1f1;
+        }
+
+        .header {
+            padding: 30px;
+            text-align: center;
+            background: white;
+        }
+
+        .header h1 {
+            font-size: 30px;
+        }
+
+        .top-nav {
+            overflow: hidden;
+            background-color: #333;
+        }
+
+        .top-nav ul a {
+            display: block;
+            float: left;
+            overflow: hidden;
+            text-decoration: none;
+            color: rgb(22, 21, 21);
+            padding: 14px 16px;
+            color: white;
+        }
+
+        .top-nav a:hover {
+            background-color: white;
+            color: rgb(43, 43, 43);
+        }
+
+        .left-column {
+            width: 75%;
+            float: left;
+            padding-right: 70px;
+        }
+
+        .right-column {
+            float: left;
+            width: 25%;
+            background-color: #f1f1f1;
+            padding-left: 20px;
+
+        }
+
+        .footer {
+            clear: both;
+            padding: 20px;
+            text-align: center;
+            background: #ddcccc;
+            margin-top: 20px;
+        }
+        @media screen and (max-width: 600px) {
+            .left-column,
+            .right-column {
+                width: 100%;
+                padding-right: 0;
+            }
+            .top-nav ul a {
+                float: none;
+            }
+            
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header ">
+        <h1>My Website</h1>
+        <p>Resize the browser to see the effect.</p>
+    </div>
+    <div class="top-nav">
+        <ul><a href="#">Link</a></ul>
+        <ul><a href="#">Link</a></ul>
+        <ul><a href="#">Link</a></ul>
+        <ul><a href="#">Link</a></ul>
+
+        <ul><a style="float:right" href="#">Link</a></ul>
+    </div>
+
+    <div class="row">
+        <div class="left-column">
+            <div class="card">
+                <h2>TITLE HEADING</h2>
+                <h5>Title description, Dec 7, 2017</h5>
+                <div class="fakeimg" style="height:200px; background-color: #333;">Image</div>
+                <p>Some text..</p>
+                <p>Sunt in culpa qui officia deserunt mollit anim id est laborum consectetur adipiscing elit, sed do
+                    eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud
+                    exercitation ullamco.</p>
+            </div>
+            <div class="card">
+                <h2>TITLE HEADING</h2>
+                <h5>Title description, Dec 7, 2017</h5>
+                <div class="fakeimg" style="height:200px; background-color: #333;">Image</div>
+                <p>Some text..</p>
+                <p>Sunt in culpa qui officia deserunt mollit anim id est laborum consectetur adipiscing elit, sed do
+                    eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud
+                    exercitation ullamco.</p>
+            </div>
+        </div>
+        <div class="right-column">
+            <div class="card">
+                <h2>About Me</h2>
+                <div class="fake-img" style="height: 100px; background-color: #333;">Image</div>
+                <p>Some text about me in culpa qui officia deserunt mollit anim..</p>
+            </div>
+            <div class="card">
+                <h2>Popular Post</h2>
+                <div class="fakeimg" style="height: 100px; background-color: #333;">Image</div>
+                <div class="fakeimg" style="height: 100px; background-color: #333;">Image</div>
+                <div class="fakeimg" style="height: 100px; background-color: #333;">Image</div>
+            </div>
+            <div class="card">
+                <h2>Follow Me</h2>
+                <p>Some text..</p>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="footer">
+        <h1>Footer</h1>
+    </div>
+
+</body>
+
+</html>
